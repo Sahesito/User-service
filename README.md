@@ -1,7 +1,7 @@
 ## 👤 User Service – SmartCommerce
 This module manages all user-related data and enforces role-based access control across the platform. It operates as an independent microservice registered in Eureka and secured using JWT authentication.
 
-##🎯 Why This Module Exists
+## 🎯 Why This Module Exists
 - User Lifecycle Management
   Handles creation, updates, soft deletion, permanent deletion, and reactivation of users.
 
