@@ -28,7 +28,9 @@ This module manages all user-related data and enforces role-based access control
 - JWT filter executed before authentication processing
 - Protected endpoints require ADMIN or SELLER roles depending on operation
 - Public endpoints:
+
   **/actuator/** **
+  
   **/users/from-auth**
 
 ## 🌐 Core Endpoints
