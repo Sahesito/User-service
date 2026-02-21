@@ -22,7 +22,7 @@ spring:
         format_sql: true
 
   sql:
-    initialization:
+    init:
       mode: always
 
 eureka:
