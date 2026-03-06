@@ -49,3 +49,7 @@ management:
 logging:
   level:
     com.smartcommerce.user: DEBUG
+
+feign:
+  circuitbreaker:
+    enabled: true

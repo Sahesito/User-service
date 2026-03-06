@@ -25,7 +25,6 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Constructor desde Entity
     public UserResponse(User user) {
         this.id = user.getId();
         this.firstName = user.getFirstName();

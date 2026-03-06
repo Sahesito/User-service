@@ -24,7 +24,6 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
 
-    // Obtener Usuarios
     // GET http://localhost:8082/users
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
@@ -34,7 +33,6 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    // Obtener Usuario X Id
     // GET http://localhost:8082/users/1
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
@@ -44,7 +42,6 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    // Obtener Usuario x Email
     // GET http://localhost:8082/users/email/admin@smartcommerce.com
     @GetMapping("/email/{email}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
@@ -54,7 +51,6 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    // Obtener Usuario por rol
     // GET http://localhost:8082/users/role/ADMIN
     @GetMapping("/role/{role}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -64,7 +60,6 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    // Obtener Usuario por estado
     // GET http://localhost:8082/users/active/true
     @GetMapping("/active/{active}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -74,7 +69,6 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    // Crear Usuario
     // POST http://localhost:8082/users
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -84,7 +78,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
-    // Actualizar Usuario
     // PUT http://localhost:8082/users/1
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -96,7 +89,6 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    // Eliminar Usuario (Soft Delete)
     // DELETE http://localhost:8082/users/1
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -106,7 +98,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // Eliminar Usuario PERMANENTEMENTE
     // DELETE http://localhost:8082/users/1/permanent
     @DeleteMapping("/{id}/permanent")
     @PreAuthorize("hasRole('ADMIN')")
@@ -116,7 +107,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // Reactivar Usuario
     // PATCH http://localhost:8082/users/1/reactivate
     @PatchMapping("/{id}/reactivate")
     @PreAuthorize("hasRole('ADMIN')")
@@ -126,18 +116,17 @@ public class UserController {
         return ResponseEntity.ok(reactivatedUser);
     }
 
-    // Crear usuario desde Auth Service
     // POST http://localhost:8082/users/from-auth
     @PostMapping("/from-auth")
     public ResponseEntity<UserResponse> createUserFromAuth(@Valid @RequestBody UserRequest request) {
         log.info("POST /users/from-auth - Create user from Auth Service: {}", request.getEmail());
         if (userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Usuario ya existe en User Service: {}", request.getEmail());
+            log.warn("User already exists in User Service: {}", request.getEmail());
             UserResponse existingUser = userService.getUserByEmail(request.getEmail());
             return ResponseEntity.ok(existingUser);
         }
         UserResponse createdUser = userService.createUser(request);
-        log.info("Usuario creado correctamente en User Service: {}", createdUser.getEmail());
+        log.info("User successfully created in User Service: {}", createdUser.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 }

@@ -8,25 +8,19 @@ import sahe.com.userservice.model.User;
 @Data
 public class UserRequest {
 
-    @NotBlank(message = "Nombre requerido")
+    @NotBlank(message = "Name Required")
     private String firstName;
 
-    @NotBlank(message = "Apellidos requeridos")
+    @NotBlank(message = "LastNames Required")
     private String lastName;
 
-    @NotBlank(message = "Correo requerido")
-    @Email(message = "Correo debe ser valido")
+    @NotBlank(message = "Email Required")
+    @Email(message = "Email address must be valid")
     private String email;
-
     private User.Role role = User.Role.CLIENT;
-
     private Boolean active = true;
-
     private String phone;
-
     private String address;
-
     private String city;
-
     private String country;
 }

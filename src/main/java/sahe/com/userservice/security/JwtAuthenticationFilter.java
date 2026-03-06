@@ -31,7 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwt != null && jwtUtils.validateToken(jwt)) {
                 String email = jwtUtils.getEmailFromToken(jwt);
                 String role = jwtUtils.getRoleFromToken(jwt);
-                // Crear autenticación con el rol
                 List<SimpleGrantedAuthority> authorities = List.of(
                         new SimpleGrantedAuthority("ROLE_" + role)
                 );
@@ -43,10 +42,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         );
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("Autenticación para usuario: {} con rol: {}", email, role);
+                log.debug("User authentication: {} with role: {}", email, role);
             }
         } catch (Exception ex) {
-            log.error("No se pudo establecer la autenticación del usuario en el contexto de seguridad", ex);
+            log.error("User authentication could not be established in the security context", ex);
         }
         filterChain.doFilter(request, response);
     }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sahe.com.userservice.client.AuthClient;
 import sahe.com.userservice.dto.UserRequest;
 import sahe.com.userservice.dto.UserResponse;
 import sahe.com.userservice.model.User;
@@ -18,58 +19,51 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AuthClient authClient;
 
-    /* Todos los usuarios */
     public List<UserResponse> getAllUsers() {
-        log.info("Extrayendo todos los usuarios");
+        log.info("Extracting all users");
         return userRepository.findAll()
                 .stream()
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
     }
 
-    /* Usuario por Id*/
     public UserResponse getUserById(Long id) {
-        log.info("Buscando usuario por id: {}", id);
+        log.info("Searching for user by ID: {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado por id: " + id));
+                .orElseThrow(() -> new RuntimeException("User not found by ID: " + id));
         return new UserResponse(user);
     }
 
-    /* Usuario por correo */
     public UserResponse getUserByEmail(String email) {
-        log.info("Buscando usuario por correo: {}", email);
+        log.info("Searching for user by email: {}", email);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado por correo: " + email));
+                .orElseThrow(() -> new RuntimeException("User not found by email: " + email));
         return new UserResponse(user);
     }
 
-    /* Usuario por roles*/
     public List<UserResponse> getUsersByRole(User.Role role) {
-        log.info("Buscando usuario por rol: {}", role);
+        log.info("Searching user by role: {}", role);
         return userRepository.findByRole(role)
                 .stream()
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
     }
 
-    /* Usuario por estado*/
     public List<UserResponse> getUsersByActiveStatus(Boolean active) {
-        log.info("Buscando usuario por estado: {}", active);
+        log.info("Searching user by state: {}", active);
         return userRepository.findByActive(active)
                 .stream()
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
     }
 
-    /* Crear Usuario*/
     @Transactional
     public UserResponse createUser(UserRequest request) {
-        log.info("Creando usuario con el correo: {}", request.getEmail());
-
-        // Verificar si el email ya existe
+        log.info("Creating a user with the email: {}", request.getEmail());
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("El correo ya existe: " + request.getEmail());
+            throw new RuntimeException("The email already exists: " + request.getEmail());
         }
 
         User user = new User();
@@ -84,26 +78,22 @@ public class UserService {
         user.setCountry(request.getCountry());
 
         User savedUser = userRepository.save(user);
-        log.info("Usuario creado correctamente id: {}", savedUser.getId());
+        log.info("User successfully created id: {}", savedUser.getId());
 
         return new UserResponse(savedUser);
     }
 
-    /* Actualizar Usuario */
     @Transactional
     public UserResponse updateUser(Long id, UserRequest request) {
-        log.info("Actualizando usuario por id: {}", id);
+        log.info("Updating user by ID: {}", id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario con id no encontrado: " + id));
-
-        // Verificar si el email cambió y ya existe
+                .orElseThrow(() -> new RuntimeException("User with ID not found: " + id));
         if (!user.getEmail().equals(request.getEmail()) &&
                 userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Correo existente: " + request.getEmail());
+            throw new RuntimeException("Existing email: " + request.getEmail());
         }
 
-        // Actualizar campos
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
@@ -115,51 +105,61 @@ public class UserService {
         user.setCountry(request.getCountry());
 
         User updatedUser = userRepository.save(user);
-        log.info("Usuario actualizado correctamente con id: {}", updatedUser.getId());
+        log.info("User successfully updated with id: {}", updatedUser.getId());
 
         return new UserResponse(updatedUser);
     }
 
-    /* Eliminar Usuario (Soft delete) */
     @Transactional
     public void deleteUser(Long id) {
-        log.info("Borrando usuario con id: {}", id);
+        log.info("Deleting user with id: {}", id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        // Soft delete: solo desactivamos el usuario
         user.setActive(false);
         userRepository.save(user);
 
-        log.info("Usuario borrado (desactivado) correctamente con id: {}", id);
+        try {
+            authClient.deactivateByEmail(user.getEmail());
+            log.info("User also disabled in auth-service: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Error disabling in auth-service: {}", e.getMessage());
+        }
+
+        log.info("User successfully deleted (deactivated) with id: {}", id);
     }
 
-    /* Borrar Usuario (Permanente) */
     @Transactional
     public void deleteUserPermanently(Long id) {
-        log.info("Usuario borrado permanentemente con id: {}", id);
+        log.info("User permanently deleted with id: {}", id);
 
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("Usuario no encontrado con id: " + id);
+            throw new RuntimeException("User not found with id: " + id);
         }
 
         userRepository.deleteById(id);
-        log.info("Usuario borrado permanentemente con id: {}", id);
+        log.info("User permanently deleted with id: {}", id);
     }
 
-    /* Reactivar usuario */
     @Transactional
     public UserResponse reactivateUser(Long id) {
-        log.info("Reactivando usuario con id: {}", id);
+        log.info("Reactivating user with ID: {}", id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
         user.setActive(true);
         User reactivatedUser = userRepository.save(user);
 
-        log.info("Usuario reactivado correctamente con id: {}", reactivatedUser.getId());
+        try {
+            authClient.activateByEmail(user.getEmail());
+            log.info("User also reactivated in auth-service: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Error reactivating in auth-service: {}", e.getMessage());
+        }
+
+        log.info("User successfully reactivated with id: {}", reactivatedUser.getId());
         return new UserResponse(reactivatedUser);
     }
 }
